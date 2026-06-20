@@ -59,7 +59,10 @@ export default function piFooterExtension(pi: ExtensionAPI) {
   async function readGitInfo(): Promise<GitInfo> {
     const inside = await runGit(['rev-parse', '--is-inside-work-tree']);
     if (inside !== 'true') {
-      return EMPTY_GIT_STATE;
+      return {
+        ...EMPTY_GIT_STATE,
+        worktree: ctxRef?.cwd || '-',
+      };
     }
 
     const topLevel = (await runGit(['rev-parse', '--show-toplevel'])) || '-';

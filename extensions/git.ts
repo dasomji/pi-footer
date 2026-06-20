@@ -32,28 +32,33 @@ type GitRow = {
   labelColor?: string;
 };
 
-export function buildGitPanel(snapshot: GitInfo, maxInner: number): BuiltPanel {
-  const worktreeValue = snapshot.inRepo ? snapshot.worktree : '(not a git repository)';
-  const branchValue = snapshot.inRepo ? snapshot.branch : '-';
-  const trackingValue = snapshot.inRepo ? snapshot.tracking : '-';
-
-  const expectedTracking = `origin/${branchValue}`;
+function buildRepositoryRows(snapshot: GitInfo): GitRow[] {
+  const expectedTracking = `origin/${snapshot.branch}`;
   const shouldShowTracking =
-    snapshot.inRepo && (trackingValue === '(no upstream)' || trackingValue !== expectedTracking);
+    snapshot.tracking === '(no upstream)' || snapshot.tracking !== expectedTracking;
 
-  const rows: GitRow[] = shouldShowTracking
-    ? [
-        { label: 'worktree', value: worktreeValue, labelColor: GREEN_FG },
-        { label: 'branch', value: branchValue, labelColor: GREEN_DARK_FG },
-        { label: 'tracking', value: trackingValue, labelColor: GREEN_DARK_FG },
-      ]
+  const rows: GitRow[] = [
+    { label: 'worktree', value: snapshot.worktree, labelColor: GREEN_FG },
+    { label: 'branch', value: snapshot.branch, labelColor: GREEN_DARK_FG },
+  ];
+
+  if (shouldShowTracking) {
+    rows.push({ label: 'tracking', value: snapshot.tracking, labelColor: GREEN_DARK_FG });
+  }
+
+  return rows;
+}
+
+export function buildGitPanel(snapshot: GitInfo, maxInner: number): BuiltPanel {
+  const rows: GitRow[] = snapshot.inRepo
+    ? buildRepositoryRows(snapshot)
     : [
-        { label: 'worktree', value: worktreeValue, labelColor: GREEN_FG },
-        { label: 'branch', value: branchValue, labelColor: GREEN_DARK_FG },
+        { label: 'directory', value: snapshot.worktree, labelColor: GREEN_FG },
+        { label: 'git', value: 'no git initialised', labelColor: GREEN_DARK_FG },
       ];
 
   const labelWidth = rows.reduce((max, row) => Math.max(max, row.label.length), 0);
-  const right = `↑${snapshot.ahead} ↓${snapshot.behind}`;
+  const right = snapshot.inRepo ? `↑${snapshot.ahead} ↓${snapshot.behind}` : undefined;
 
   const naturalContentWidth = rows.reduce(
     (max, row) => Math.max(max, labelWidth + SEPARATOR_WIDTH + row.value.length),
