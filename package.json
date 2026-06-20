@@ -1,5 +1,5 @@
 {
-  "name": "pi-footer",
+  "name": "@wienerberliner/pi-footer",
   "version": "0.1.0",
   "description": "Custom pi footer panels for git status and current agent context tokens.",
   "keywords": [
@@ -30,5 +30,16 @@
     "@earendil-works/pi-coding-agent": "latest",
     "@earendil-works/pi-tui": "latest",
     "typescript": "latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dasomji/pi-footer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dasomji/pi-footer/issues"
+  },
+  "homepage": "https://github.com/dasomji/pi-footer#readme",
+  "publishConfig": {
+    "access": "public"
   }
 }

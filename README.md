@@ -9,6 +9,14 @@ The panel layout is inspired by [`@alasano/pi-panels`](https://github.com/alasan
 
 ## Install
 
+From npm:
+
+```bash
+pi install npm:@wienerberliner/pi-footer
+```
+
+Or directly from GitHub:
+
 ```bash
 pi install git:github.com/dasomji/pi-footer
 ```
