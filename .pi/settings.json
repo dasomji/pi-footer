@@ -1,0 +1,12 @@
+{
+  "packages": [
+    {
+      "source": "git:github.com/dasomji/pi-footer",
+      "extensions": [],
+      "skills": [],
+      "prompts": [],
+      "themes": []
+    },
+    ".."
+  ]
+}
