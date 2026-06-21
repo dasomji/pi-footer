@@ -10,7 +10,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:fast-mode": "rm -rf /tmp/pi-footer-fast-mode-verify && tsc --ignoreConfig --target ES2022 --module CommonJS --moduleResolution Node --ignoreDeprecations 6.0 --skipLibCheck --esModuleInterop --outDir /tmp/pi-footer-fast-mode-verify scripts/verify-fast-mode.ts extensions/fast-mode.ts && NODE_PATH=$PWD/node_modules node /tmp/pi-footer-fast-mode-verify/scripts/verify-fast-mode.js"
   },
   "pi": {
     "extensions": [

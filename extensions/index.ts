@@ -1,5 +1,10 @@
-import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent';
+import {
+  type ExtensionAPI,
+  type ExtensionContext,
+  type ReadonlyFooterDataProvider,
+} from '@earendil-works/pi-coding-agent';
 import { truncateToWidth } from '@earendil-works/pi-tui';
+import { withFastModeStatus } from './fast-mode';
 import { buildGitPanel, EMPTY_GIT_STATE, type GitInfo } from './git';
 import { buildAgentPanel, type AgentSnapshot } from './info';
 import { maxVisibleWidth, padVisible, visibleWidth } from './utils';
@@ -7,6 +12,11 @@ import { maxVisibleWidth, padVisible, visibleWidth } from './utils';
 const REFRESH_MS = 5000;
 const TICK_MS = 5000;
 const GAP = ' ';
+
+type FooterModel = {
+  id?: string;
+  contextWindow?: number;
+};
 
 function parseCount(raw: string): { behind: number; ahead: number } {
   const [behindRaw, aheadRaw] = raw.trim().split(/\s+/);
@@ -106,9 +116,9 @@ export default function piFooterExtension(pi: ExtensionAPI) {
 
   function readAgentState(ctx: ExtensionContext): AgentSnapshot {
     const usage = ctx.getContextUsage();
-    const modelContextWindow =
-      (ctx.model as { contextWindow?: number } | undefined)?.contextWindow ?? 0;
-    const modelId = ctx.model?.id || '(no model)';
+    const model = ctx.model as FooterModel | undefined;
+    const modelContextWindow = model?.contextWindow ?? 0;
+    const modelId = model?.id || '(no model)';
     const thinking = pi.getThinkingLevel();
 
     return {
@@ -118,13 +128,17 @@ export default function piFooterExtension(pi: ExtensionAPI) {
     };
   }
 
-  function buildFooterLines(width: number): string[] {
+  function buildFooterLines(
+    width: number,
+    footerData: ReadonlyFooterDataProvider | null = null,
+  ): string[] {
     const safeWidth = Math.max(1, width);
     const clampLines = (lines: string[]) =>
       lines.map((line) => truncateToWidth(line, safeWidth, '…', true));
 
     const gitPanel = buildGitPanel(gitState, safeWidth - 2);
-    const agentPanel = buildAgentPanel(agentState, safeWidth - 2);
+    const visibleAgentState = withFastModeStatus(agentState, footerData);
+    const agentPanel = buildAgentPanel(visibleAgentState, safeWidth - 2);
 
     const naturalCombined = gitPanel.width + visibleWidth(GAP) + agentPanel.width;
     if (naturalCombined <= safeWidth) {
@@ -135,7 +149,7 @@ export default function piFooterExtension(pi: ExtensionAPI) {
     const rightOuterTarget = Math.max(28, safeWidth - visibleWidth(GAP) - leftOuterTarget);
 
     const gitCompact = buildGitPanel(gitState, Math.max(24, leftOuterTarget - 2));
-    const agentCompact = buildAgentPanel(agentState, Math.max(24, rightOuterTarget - 2));
+    const agentCompact = buildAgentPanel(visibleAgentState, Math.max(24, rightOuterTarget - 2));
 
     const compactCombined = gitCompact.width + visibleWidth(GAP) + agentCompact.width;
     if (compactCombined <= safeWidth) {
@@ -212,7 +226,7 @@ export default function piFooterExtension(pi: ExtensionAPI) {
         },
         invalidate() {},
         render(width: number): string[] {
-          return buildFooterLines(width);
+          return buildFooterLines(width, footerData);
         },
       };
     });
