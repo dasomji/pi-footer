@@ -10,7 +10,7 @@ The panel layout is inspired by [`@alasano/pi-panels`](https://github.com/alasan
 
 ## Preview
 
-Desktop-width terminals show the panels side by side:
+Captured from real Pi TUI ANSI output, desktop-width terminals show the panels side by side:
 
 ![pi-footer desktop layout](https://raw.githubusercontent.com/dasomji/pi-footer/main/assets/pi-footer-wide.png)
 
