@@ -16,7 +16,8 @@
   "pi": {
     "extensions": [
       "./extensions"
-    ]
+    ],
+    "image": "https://raw.githubusercontent.com/dasomji/pi-footer/main/assets/pi-footer-wide.png"
   },
   "files": [
     "extensions",
