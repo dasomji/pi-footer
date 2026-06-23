@@ -7,6 +7,8 @@ import { truncateToWidth } from '@earendil-works/pi-tui';
 import { withFastModeStatus } from './fast-mode';
 import { buildGitPanel, EMPTY_GIT_STATE, type GitInfo } from './git';
 import { buildAgentPanel, type AgentSnapshot } from './info';
+import type { BuiltPanel } from './panel';
+import { buildStatusPanel } from './status';
 import { maxVisibleWidth, padVisible, visibleWidth } from './utils';
 
 const REFRESH_MS = 5000;
@@ -128,6 +130,32 @@ export default function piFooterExtension(pi: ExtensionAPI) {
     };
   }
 
+  function buildGitAgentLines(
+    safeWidth: number,
+    gitPanel: BuiltPanel,
+    agentPanel: BuiltPanel,
+    visibleAgentState: AgentSnapshot,
+  ): string[] {
+    const naturalCombined = gitPanel.width + visibleWidth(GAP) + agentPanel.width;
+    if (naturalCombined <= safeWidth) {
+      return combineSideBySide(gitPanel.lines, gitPanel.width, agentPanel.lines);
+    }
+
+    const leftOuterTarget = Math.max(28, Math.floor((safeWidth - visibleWidth(GAP)) * 0.55));
+    const rightOuterTarget = Math.max(28, safeWidth - visibleWidth(GAP) - leftOuterTarget);
+
+    const gitCompact = buildGitPanel(gitState, Math.max(24, leftOuterTarget - 2));
+    const agentCompact = buildAgentPanel(visibleAgentState, Math.max(24, rightOuterTarget - 2));
+
+    const compactCombined = gitCompact.width + visibleWidth(GAP) + agentCompact.width;
+    if (compactCombined <= safeWidth) {
+      return combineSideBySide(gitCompact.lines, gitCompact.width, agentCompact.lines);
+    }
+
+    const topWidth = maxVisibleWidth(gitPanel.lines);
+    return combineSideBySide(gitPanel.lines, topWidth, agentPanel.lines);
+  }
+
   function buildFooterLines(
     width: number,
     footerData: ReadonlyFooterDataProvider | null = null,
@@ -139,25 +167,23 @@ export default function piFooterExtension(pi: ExtensionAPI) {
     const gitPanel = buildGitPanel(gitState, safeWidth - 2);
     const visibleAgentState = withFastModeStatus(agentState, footerData);
     const agentPanel = buildAgentPanel(visibleAgentState, safeWidth - 2);
+    const statusPanel = buildStatusPanel(footerData?.getExtensionStatuses(), safeWidth - 2);
 
-    const naturalCombined = gitPanel.width + visibleWidth(GAP) + agentPanel.width;
-    if (naturalCombined <= safeWidth) {
-      return clampLines(combineSideBySide(gitPanel.lines, gitPanel.width, agentPanel.lines));
+    if (!statusPanel) {
+      return clampLines(buildGitAgentLines(safeWidth, gitPanel, agentPanel, visibleAgentState));
     }
 
-    const leftOuterTarget = Math.max(28, Math.floor((safeWidth - visibleWidth(GAP)) * 0.55));
-    const rightOuterTarget = Math.max(28, safeWidth - visibleWidth(GAP) - leftOuterTarget);
-
-    const gitCompact = buildGitPanel(gitState, Math.max(24, leftOuterTarget - 2));
-    const agentCompact = buildAgentPanel(visibleAgentState, Math.max(24, rightOuterTarget - 2));
-
-    const compactCombined = gitCompact.width + visibleWidth(GAP) + agentCompact.width;
-    if (compactCombined <= safeWidth) {
-      return clampLines(combineSideBySide(gitCompact.lines, gitCompact.width, agentCompact.lines));
+    const gitAgentWidth = gitPanel.width + visibleWidth(GAP) + agentPanel.width;
+    const allPanelsWidth = gitAgentWidth + visibleWidth(GAP) + statusPanel.width;
+    if (allPanelsWidth <= safeWidth) {
+      const gitAgentLines = combineSideBySide(gitPanel.lines, gitPanel.width, agentPanel.lines);
+      return clampLines(combineSideBySide(gitAgentLines, gitAgentWidth, statusPanel.lines));
     }
 
-    const topWidth = maxVisibleWidth(gitPanel.lines);
-    return clampLines(combineSideBySide(gitPanel.lines, topWidth, agentPanel.lines));
+    return clampLines([
+      ...buildGitAgentLines(safeWidth, gitPanel, agentPanel, visibleAgentState),
+      ...statusPanel.lines,
+    ]);
   }
 
   async function refreshGit(force = false) {
