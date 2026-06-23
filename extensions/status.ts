@@ -11,6 +11,7 @@ import { GREEN_DARK_FG, GREEN_FG, visibleWidth } from './utils';
 
 const INTERNAL_STATUS_KEYS = new Set([FAST_STATUS_KEY]);
 const MAX_LABEL_WIDTH = 12;
+const MIN_BODY_ROWS = 2;
 
 type StatusRow = {
   label: string;
@@ -64,13 +65,19 @@ export function buildStatusPanel(
     minInner: 24,
   });
 
+  const bodyLines = rows.map((entry) =>
+    renderRow(entry.label, entry.labelColor, labelWidth, contentWidth, (valueWidth) =>
+      truncateToWidth(entry.value, valueWidth, '…', true),
+    ),
+  );
+
+  while (bodyLines.length < MIN_BODY_ROWS) {
+    bodyLines.push('');
+  }
+
   return framePanelBody({
     title: 'STATUS',
-    bodyLines: rows.map((entry) =>
-      renderRow(entry.label, entry.labelColor, labelWidth, contentWidth, (valueWidth) =>
-        truncateToWidth(entry.value, valueWidth, '…', true),
-      ),
-    ),
+    bodyLines,
     inner,
     contentWidth,
   });

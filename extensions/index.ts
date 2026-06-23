@@ -9,7 +9,7 @@ import { buildGitPanel, EMPTY_GIT_STATE, type GitInfo } from './git';
 import { buildAgentPanel, type AgentSnapshot } from './info';
 import type { BuiltPanel } from './panel';
 import { buildStatusPanel } from './status';
-import { maxVisibleWidth, padVisible, visibleWidth } from './utils';
+import { padVisible, visibleWidth } from './utils';
 
 const REFRESH_MS = 5000;
 const TICK_MS = 5000;
@@ -152,8 +152,7 @@ export default function piFooterExtension(pi: ExtensionAPI) {
       return combineSideBySide(gitCompact.lines, gitCompact.width, agentCompact.lines);
     }
 
-    const topWidth = maxVisibleWidth(gitPanel.lines);
-    return combineSideBySide(gitPanel.lines, topWidth, agentPanel.lines);
+    return [...gitPanel.lines, ...agentPanel.lines];
   }
 
   function buildFooterLines(
